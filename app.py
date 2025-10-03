@@ -233,7 +233,7 @@ def index():
         </form>
         
         <div class="note">
-            <strong>Generated template note:</strong> The generated CSV file automatically put values on those required columns for importing POS products in HLX. Modify columns if needed.
+            <strong>Generated template note:</strong> The generated CSV file automatically put values on those required columns for importing POS products in HLX. Please double check generated file and modify columns if needed.
         </div>
     </div>
     <script>
