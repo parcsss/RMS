@@ -8,10 +8,6 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 
 def process_data(df_imported, df_basis):
-    """
-    Analyzes the imported DataFrame, performs transformations, and prepares for export.
-    Outputs columns matching the target POS template structure with specific default values.
-    """
    
     df_imported.rename(columns={
         'Category Name': 'Category Name (Old)',
