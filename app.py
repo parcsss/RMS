@@ -198,7 +198,7 @@ def index():
         
     </style>
     <div class="container">
-        <h1>POS Template shit</h1>
+        <h1>POS Template Generator</h1>
         
         <div id="success-view" style="display: {'block' if success_message == 'true' else 'none'};">
             <div class="success-prompt">
