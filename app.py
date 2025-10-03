@@ -140,7 +140,7 @@ def index():
                     output_bytes, 
                     mimetype='text/csv',
                     as_attachment=True,
-                    download_name='rename_mo_nalang.csv' 
+                    download_name='monggoloid.csv' 
                 )
                 
                 return response
