@@ -3,31 +3,28 @@ from flask import Flask, request, render_template_string, send_file, redirect, u
 import io
 import os
 
-# --- Configuration (Unchanged) ---
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # 16 Megabytes
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 
 
-# --- Helper Function for Data Processing (UPDATED DEFAULT STRINGS) ---
+
 def process_data(df_imported, df_basis):
     """
     Analyzes the imported DataFrame, performs transformations, and prepares for export.
     Outputs columns matching the target POS template structure with specific default values.
     """
-    
-    # 1. Standardize column names from the uploaded file
+   
     df_imported.rename(columns={
         'Category Name': 'Category Name (Old)',
         'Rate': 'Rate (Original)'
     }, inplace=True)
 
-    # Select the required columns from the uploaded file
+
     df_processed = df_imported[['Item Name', 'Category Name (Old)', 'Rate (Original)']].copy()
 
     # --- Remove Duplicated Item Names ---
     df_processed.drop_duplicates(subset=['Item Name'], keep='first', inplace=True)
     
-    
-    # 2. Prepare the mapping data from the basis file
+   
     df_basis_map = df_basis[[
         'Pos Product Name', 
         'Product Id', 
@@ -42,35 +39,31 @@ def process_data(df_imported, df_basis):
     df_basis_map.drop_duplicates(subset=['Item Name'], keep='first', inplace=True)
     
     
-    # 3. Merge the uploaded data with the basis map
     df_processed = pd.merge(
         df_processed, 
         df_basis_map, 
         on='Item Name', 
         how='left'
     )
+ 
     
-    # 4. Apply Fallback and Calculation
-    
-    # Use 'UNCATEGORIZED' for unmatched items
+
     df_processed['Category Name (New)'].fillna('UNCATEGORIZED', inplace=True) 
     
-    # Calculate the Base Price (Rate / 1.12).
+   
     df_processed['Rate (Base Price)'] = df_processed['Rate (Original)'] / 1.12
     
-    # Round the calculated price to two decimal places
+   
     df_processed['Rate (Base Price)'] = df_processed['Rate (Base Price)'].round(2)
     
     df_processed.sort_values(by='Product Id', inplace=True, na_position='last')
     
-    
-    # --- UPDATED: Set Specific String Values for Requested Columns ---
     df_processed['Featured Product'] = 'N'
     df_processed['Pos Point Short Name'] = 'RMS'
     df_processed['Unit Short Name'] = 'Unit'
     df_processed['Status'] = 'A'
 
-    # Set remaining placeholder columns to empty string
+    
     remaining_placeholder_cols = [
         'Description', 'Taxes Short Name', 'Pos Attributes', 
         'NC value(%)', 'Kitchen Code'
@@ -78,25 +71,23 @@ def process_data(df_imported, df_basis):
     for col in remaining_placeholder_cols:
         df_processed[col] = ''
     
-    
-    # 5. Finalize columns for export in the desired POS template order
+  
     df_final = df_processed[[
         'Featured Product',
         'Pos Point Short Name',
-        'Item Name',              # To be renamed to Pos Product Name
+        'Item Name',              
         'Product Id', 
         'Description',
-        'Category Name (New)',    # To be renamed to Pos Categories
+        'Category Name (New)',    
         'Taxes Short Name',
         'Pos Attributes',
-        'Rate (Base Price)',      # To be renamed to Price
+        'Rate (Base Price)',      
         'NC value(%)',
         'Unit Short Name',
         'Kitchen Code',
         'Status'
     ]].copy()
-    
-    # --- FINAL MAPPING TO TARGET POS TEMPLATE COLUMNS ---
+
     df_final.rename(columns={
         'Item Name': 'Pos Product Name',        
         'Category Name (New)': 'Pos Categories', 
@@ -105,7 +96,6 @@ def process_data(df_imported, df_basis):
 
     return df_final
 
-# --- Flask Routes (Unchanged Logic) ---
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -120,8 +110,7 @@ def index():
         if file and file.filename.endswith(('.xlsx', '.xls')):
             try:
                 df_imported = pd.read_excel(file)
-                
-                # Load the basis file
+
                 basis_file_name = 'basis_data.csv' 
                 if not os.path.exists(basis_file_name):
                     return f"Error: Basis file '{basis_file_name}' not found. Please save 'PosProductDetails-RMS (1).csv' as 'basis_data.csv' in the same folder as 'app.py'.", 500
@@ -130,7 +119,6 @@ def index():
                 
                 df_exported = process_data(df_imported, df_basis)
                 
-                # Generate downloadable CSV file
                 output = io.StringIO()
                 df_exported.to_csv(output, index=False)
                 output.seek(0)
@@ -148,7 +136,6 @@ def index():
             except Exception as e:
                 return f"An error occurred during file processing: {e}", 500
 
-    # HTML Interface for file upload (GET request)
     success_message = request.args.get('success')
     
     html_template = f"""
@@ -219,10 +206,10 @@ def index():
         
         <div id="success-view" style="display: {'block' if success_message == 'true' else 'none'};">
             <div class="success-prompt">
-                ✅ File successfully processed and download initiated!
+                ✅ File successfully generated!
             </div>
             <button class="reset-button" onclick="window.location.href = window.location.pathname;">
-                Generate New File
+                Generate New Template
             </button>
         </div>
 
